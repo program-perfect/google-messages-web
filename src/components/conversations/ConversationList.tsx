@@ -216,7 +216,7 @@ export function ConversationList() {
   }
 
   return (
-    <div className="relative flex-1 overflow-y-auto" role="list" aria-label="Conversations">
+    <div className="relative flex-1 overflow-y-auto pb-20" role="list" aria-label="Conversations">
       <AnimatePresence initial={false}>
         {displayConversations.map((conv) => (
           <ConversationItem

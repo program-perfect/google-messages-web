@@ -220,6 +220,22 @@ export function MessageComposer({ conversationId }: MessageComposerProps) {
           </span>
         </button>
 
+        {/* Attachment button — stub, opens nothing yet */}
+        <button
+          type="button"
+          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 hover:bg-[var(--md-sys-color-surface-container-high)] transition-colors self-end mb-0.5"
+          aria-label="Attach file"
+          style={{ color: "var(--md-sys-color-on-surface-variant)" }}
+        >
+          <span
+            className="material-symbols-outlined"
+            style={{ fontSize: 24 }}
+            aria-hidden="true"
+          >
+            attach_file
+          </span>
+        </button>
+
         {/* Text input */}
         <div
           className="flex-1 flex items-end rounded-3xl px-4 py-2"
