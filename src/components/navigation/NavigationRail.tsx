@@ -18,15 +18,12 @@ const NAV_ITEMS: NavItem[] = [
 
 export function NavigationRail() {
   const activeTab = useChatStore((s) => s.activeTab);
-  const setActiveTab = useChatStore((s) => s.setActiveTab);
-  const openSearch = useChatStore((s) => s.setSearchOpen);
-  const setTheme = useChatStore((s) => s.setTheme);
   const theme = useChatStore((s) => s.theme);
 
   const isDark = theme === "dark";
 
   function toggleTheme() {
-    setTheme(isDark ? "light" : "dark");
+    useChatStore.getState().setTheme(isDark ? "light" : "dark");
   }
 
   return (
@@ -62,7 +59,7 @@ export function NavigationRail() {
           return (
             <button
               key={item.tab}
-              onClick={() => setActiveTab(item.tab)}
+              onClick={() => useChatStore.getState().setActiveTab(item.tab)}
               className="relative flex flex-col items-center gap-1 w-full py-2 rounded-2xl cursor-pointer transition-colors"
               style={{
                 background: isActive
@@ -105,7 +102,7 @@ export function NavigationRail() {
 
       {/* Search button */}
       <button
-        onClick={() => openSearch(true)}
+        onClick={() => useChatStore.getState().setSearchOpen(true)}
         className="flex flex-col items-center gap-1 w-full px-2 py-2 rounded-2xl cursor-pointer transition-colors hover:bg-[var(--md-sys-color-surface-container-high)]"
         style={{ color: "var(--md-sys-color-on-surface-variant)" }}
         aria-label="Search"

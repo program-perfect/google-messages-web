@@ -12,12 +12,12 @@ interface ContextMenuProps {
   position: { x: number; y: number };
   onClose: () => void;
   onReact: (messageId: string) => void;
+  onReply: (messageId: string) => void;
 }
 
-export function ContextMenu({ message, position, onClose, onReact }: ContextMenuProps) {
+export function ContextMenu({ message, position, onClose, onReact, onReply }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
-  const patchMessage = useChatStore((s) => s.patchMessage);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -43,7 +43,7 @@ export function ContextMenu({ message, position, onClose, onReact }: ContextMenu
   const adjustedY = Math.min(position.y, window.innerHeight - menuHeight - 8);
 
   async function handleDelete() {
-    patchMessage(message.id, message.conversationId, { isDeleted: true });
+    useChatStore.getState().patchMessage(message.id, message.conversationId, { isDeleted: true });
     await deleteMessage(message.id, message.conversationId);
     queryClient.invalidateQueries({ queryKey: ["messages", message.conversationId] });
     onClose();
@@ -70,7 +70,10 @@ export function ContextMenu({ message, position, onClose, onReact }: ContextMenu
     {
       icon: "reply",
       label: "Reply",
-      onClick: onClose,
+      onClick: () => {
+        onReply(message.id);
+        onClose();
+      },
     },
     {
       icon: "content_copy",

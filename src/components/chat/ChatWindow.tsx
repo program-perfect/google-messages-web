@@ -1,27 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useShallow } from "zustand/shallow";
 import { useQuery } from "@tanstack/react-query";
 import { useChatStore } from "@/store/useChatStore";
-import { fetchConversation } from "@/services/mockApi";
 import { Avatar } from "@/components/ui/Avatar";
 import { MessageList } from "./MessageList";
 import { MessageComposer } from "./MessageComposer";
 import { ContextMenu } from "./ContextMenu";
 import { ReactionPicker } from "./ReactionPicker";
+import { fetchConversations } from "@/services/mockApi";
+import { idbGetAllConversations } from "@/lib/idb";
 import type { Message } from "@/types/global";
+
+const EMPTY_MESSAGES: Message[] = [];
 
 interface ChatWindowProps {
   conversationId: string;
 }
 
 export function ChatWindow({ conversationId }: ChatWindowProps) {
-  const setActiveConversationId = useChatStore((s) => s.setActiveConversationId);
-  const setSidebarOpen = useChatStore((s) => s.setSidebarOpen);
-  const messages = useChatStore((s) => s.messages[conversationId] ?? []);
+  // Look up conversation metadata from the shared React Query cache — the
+  // same cache that ConversationList populates — so we always have fresh data
+  // without an extra network request.
+  const { data: conversations = [] } = useQuery({
+    queryKey: ["conversations"],
+    queryFn: async () => {
+      try {
+        return await fetchConversations();
+      } catch {
+        return idbGetAllConversations();
+      }
+    },
+    staleTime: Infinity, // reuse the cache already populated by ConversationList
+  });
+  const conversation = conversations.find((c) => c.id === conversationId) ?? null;
 
-  const [contextMenu, setContextMenu] = useState<{
+  // Stable state subscriptions for messages ───────────────────────────────
+  const messages = useChatStore(
+    useShallow((s) => s.messages[conversationId] ?? EMPTY_MESSAGES)
+  );
+
+  // UI-only local state ────────────────────────────────────────────────────
+  const [contextMenuState, setContextMenuState] = useState<{
     messageId: string;
     position: { x: number; y: number };
   } | null>(null);
@@ -31,36 +53,37 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     position: { x: number; y: number };
   } | null>(null);
 
-  const { data: conversation } = useQuery({
-    queryKey: ["conversation", conversationId],
-    queryFn: () => fetchConversation(conversationId),
-    staleTime: 30_000,
-  });
+  // Look up the context message only when the context menu is open.
+  // Stored in state so the identity is stable during the menu's lifecycle.
+  const contextMessage: Message | undefined = contextMenuState
+    ? messages.find((m) => m.id === contextMenuState.messageId)
+    : undefined;
 
-  const contextMessage: Message | undefined =
-    contextMenu
-      ? messages.find((m) => m.id === contextMenu.messageId)
-      : undefined;
-
-  function handleBack() {
+  // Handlers ───────────────────────────────────────────────────────────────
+  const handleBack = useCallback(() => {
+    const { setActiveConversationId, setSidebarOpen } = useChatStore.getState();
     setActiveConversationId(null);
     setSidebarOpen(true);
-  }
+  }, []);
 
-  function handleContextMenu(messageId: string, e: React.MouseEvent) {
-    e.preventDefault();
-    setReactionPicker(null);
-    setContextMenu({ messageId, position: { x: e.clientX, y: e.clientY } });
-  }
+  const handleContextMenu = useCallback(
+    (messageId: string, e: React.MouseEvent) => {
+      e.preventDefault();
+      setReactionPicker(null);
+      setContextMenuState({ messageId, position: { x: e.clientX, y: e.clientY } });
+    },
+    []
+  );
 
-  function handleReactionClick(messageId: string) {
-    setContextMenu(null);
-    // Position reaction picker near the top of the screen (approximate)
-    setReactionPicker({
-      messageId,
-      position: { x: window.innerWidth / 2, y: 120 },
-    });
-  }
+  const handleReactionClick = useCallback(
+    (messageId: string, e?: React.MouseEvent) => {
+      setContextMenuState(null);
+      const x = e ? e.clientX : window.innerWidth / 2;
+      const y = e ? Math.max(e.clientY - 56, 80) : 120;
+      setReactionPicker({ messageId, position: { x, y } });
+    },
+    []
+  );
 
   return (
     <motion.div
@@ -95,8 +118,8 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
         <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
           {conversation && (
             <Avatar
-              name={conversation.name}
-              initials={conversation.initials}
+              name={conversation.name ?? ""}
+              initials={conversation.initials ?? ""}
               avatarColor={conversation.avatarColor}
               avatar={conversation.avatar}
               size={40}
@@ -165,15 +188,19 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
 
       {/* Context menu portal */}
       <AnimatePresence>
-        {contextMenu && contextMessage && (
+        {contextMenuState && contextMessage && (
           <ContextMenu
             key="context-menu"
             message={contextMessage}
-            position={contextMenu.position}
-            onClose={() => setContextMenu(null)}
+            position={contextMenuState.position}
+            onClose={() => setContextMenuState(null)}
             onReact={(id) => {
-              setContextMenu(null);
-              setReactionPicker({ messageId: id, position: contextMenu.position });
+              setContextMenuState(null);
+              setReactionPicker({ messageId: id, position: contextMenuState.position });
+            }}
+            onReply={(id) => {
+              useChatStore.getState().setReplyingTo(conversationId, id);
+              setContextMenuState(null);
             }}
           />
         )}
