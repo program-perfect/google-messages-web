@@ -12,7 +12,6 @@ import { EmptyState } from "@/components/chat/EmptyState";
 export function AppShell() {
   const activeConversationId = useChatStore((s) => s.activeConversationId);
   const sidebarOpen = useChatStore((s) => s.sidebarOpen);
-  const setSidebarOpen = useChatStore((s) => s.setSidebarOpen);
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -44,7 +43,7 @@ export function AppShell() {
           window.innerWidth < 768
         ) {
           setActiveConversationId(null);
-          setSidebarOpen(true);
+          useChatStore.getState().setSidebarOpen(true);
         }
         return;
       }
@@ -84,7 +83,7 @@ export function AppShell() {
         const next = visible[nextIdx];
         if (next) {
           setActiveConversationId(next.id);
-          if (window.innerWidth < 768) setSidebarOpen(false);
+          if (window.innerWidth < 768) useChatStore.getState().setSidebarOpen(false);
         }
         return;
       }
@@ -92,18 +91,18 @@ export function AppShell() {
 
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [setSidebarOpen]);
+  }, []);
 
   // Responsive: on resize to desktop, always show sidebar
   useEffect(() => {
     function onResize() {
       if (window.innerWidth >= 768) {
-        setSidebarOpen(true);
+        useChatStore.getState().setSidebarOpen(true);
       }
     }
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [setSidebarOpen]);
+  }, []);
 
   return (
     <div

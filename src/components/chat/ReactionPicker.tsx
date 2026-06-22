@@ -23,7 +23,6 @@ export function ReactionPicker({
   onClose,
 }: ReactionPickerProps) {
   const pickerRef = useRef<HTMLDivElement>(null);
-  const patchMessage = useChatStore((s) => s.patchMessage);
   const messages = useChatStore((s) => s.messages[conversationId] ?? EMPTY_MESSAGES);
 
   useEffect(() => {
@@ -57,7 +56,7 @@ export function ReactionPicker({
           .map((r) => (r.emoji === emoji ? { ...r, count: r.count + 1 } : r))
       : [...msg.reactions, { emoji, count: 1 }];
 
-    patchMessage(messageId, conversationId, { reactions: newReactions });
+    useChatStore.getState().patchMessage(messageId, conversationId, { reactions: newReactions });
     await addReaction(messageId, conversationId, emoji);
     onClose();
   }

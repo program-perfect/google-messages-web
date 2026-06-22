@@ -18,7 +18,6 @@ interface ContextMenuProps {
 export function ContextMenu({ message, position, onClose, onReact, onReply }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
-  const patchMessage = useChatStore((s) => s.patchMessage);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

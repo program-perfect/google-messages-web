@@ -7,8 +7,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export function Sidebar() {
   const searchOpen = useChatStore((s) => s.searchOpen);
-  const setSearchOpen = useChatStore((s) => s.setSearchOpen);
-  const setTheme = useChatStore((s) => s.setTheme);
   const theme = useChatStore((s) => s.theme);
   const isOffline = useChatStore((s) => s.isOffline);
 
@@ -59,7 +57,7 @@ export function Sidebar() {
           {/* Search */}
           <button
             className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-[var(--md-sys-color-surface-container-high)] transition-colors"
-            onClick={() => setSearchOpen(true)}
+            onClick={() => useChatStore.getState().setSearchOpen(true)}
             aria-label="Search"
             style={{ color: "var(--md-sys-color-on-surface-variant)" }}
           >
@@ -71,7 +69,7 @@ export function Sidebar() {
           {/* Theme toggle */}
           <button
             className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-[var(--md-sys-color-surface-container-high)] transition-colors"
-            onClick={() => setTheme(isDark ? "light" : "dark")}
+            onClick={() => useChatStore.getState().setTheme(isDark ? "light" : "dark")}
             aria-label={isDark ? "Switch to light" : "Switch to dark"}
             style={{ color: "var(--md-sys-color-on-surface-variant)" }}
           >
@@ -156,7 +154,7 @@ export function Sidebar() {
       {/* Search overlay */}
       <AnimatePresence>
         {searchOpen && (
-          <SearchOverlay key="search" onClose={() => setSearchOpen(false)} />
+          <SearchOverlay key="search" onClose={() => useChatStore.getState().setSearchOpen(false)} />
         )}
       </AnimatePresence>
     </div>

@@ -33,18 +33,13 @@ const NAV_ITEMS: NavItem[] = [
 
 export function BottomNavBar() {
   const activeTab = useChatStore((s) => s.activeTab);
-  const setActiveTab = useChatStore((s) => s.setActiveTab);
-  const setSidebarOpen = useChatStore((s) => s.setSidebarOpen);
-  const setActiveConversationId = useChatStore(
-    (s) => s.setActiveConversationId
-  );
 
   function handleTabSelect(tab: NavItem["key"]) {
-    setActiveTab(tab);
+    useChatStore.getState().setActiveTab(tab);
     // On mobile switching tab always shows the sidebar (conversation list)
     if (typeof window !== "undefined" && window.innerWidth < 768) {
-      setActiveConversationId(null);
-      setSidebarOpen(true);
+      useChatStore.getState().setActiveConversationId(null);
+      useChatStore.getState().setSidebarOpen(true);
     }
   }
 
