@@ -10,22 +10,36 @@ export function DateSeparator({ isoDate }: DateSeparatorProps) {
   const label = formatDateSeparator(isoDate);
   return (
     <div
-      className="flex items-center justify-center py-3 px-4"
+      className="flex items-center gap-3 py-4 px-6"
       role="separator"
       aria-label={label}
     >
+      {/* Left rule */}
       <div
-        className="px-4 py-1 rounded-full"
+        className="flex-1 h-px"
+        style={{ background: "var(--md-sys-color-outline-variant)" }}
+        aria-hidden="true"
+      />
+
+      {/* Label chip */}
+      <span
+        className="shrink-0 select-none"
         style={{
-          background: "var(--md-sys-color-surface-container-high)",
           color: "var(--md-sys-color-on-surface-variant)",
           fontSize: 12,
           fontWeight: 500,
-          letterSpacing: "0.3px",
+          letterSpacing: "0.4px",
         }}
       >
         {label}
-      </div>
+      </span>
+
+      {/* Right rule */}
+      <div
+        className="flex-1 h-px"
+        style={{ background: "var(--md-sys-color-outline-variant)" }}
+        aria-hidden="true"
+      />
     </div>
   );
 }
