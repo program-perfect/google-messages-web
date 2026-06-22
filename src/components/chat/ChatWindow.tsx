@@ -21,9 +21,6 @@ interface ChatWindowProps {
 }
 
 export function ChatWindow({ conversationId }: ChatWindowProps) {
-  // Look up conversation metadata from the shared React Query cache — the
-  // same cache that ConversationList populates — so we always have fresh data
-  // without an extra network request.
   const { data: conversations = [] } = useQuery({
     queryKey: ["conversations"],
     queryFn: async () => {
@@ -33,16 +30,12 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
         return idbGetAllConversations();
       }
     },
-    staleTime: Infinity, // reuse the cache already populated by ConversationList
+    staleTime: Infinity,
   });
   const conversation = conversations.find((c) => c.id === conversationId) ?? null;
 
-  // Stable state subscriptions for messages ───────────────────────────────
-  const messages = useChatStore(
-    useShallow((s) => s.messages[conversationId] ?? EMPTY_MESSAGES)
-  );
+  const messages = useChatStore(useShallow((s) => s.messages[conversationId] ?? EMPTY_MESSAGES));
 
-  // UI-only local state ────────────────────────────────────────────────────
   const [contextMenuState, setContextMenuState] = useState<{
     messageId: string;
     position: { x: number; y: number };
@@ -53,140 +46,97 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
     position: { x: number; y: number };
   } | null>(null);
 
-  // Look up the context message only when the context menu is open.
-  // Stored in state so the identity is stable during the menu's lifecycle.
   const contextMessage: Message | undefined = contextMenuState
     ? messages.find((m) => m.id === contextMenuState.messageId)
     : undefined;
 
-  // Handlers ───────────────────────────────────────────────────────────────
   const handleBack = useCallback(() => {
     const { setActiveConversationId, setSidebarOpen } = useChatStore.getState();
     setActiveConversationId(null);
     setSidebarOpen(true);
   }, []);
 
-  const handleContextMenu = useCallback(
-    (messageId: string, e: React.MouseEvent) => {
-      e.preventDefault();
-      setReactionPicker(null);
-      setContextMenuState({ messageId, position: { x: e.clientX, y: e.clientY } });
-    },
-    []
-  );
+  const handleContextMenu = useCallback((messageId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    setReactionPicker(null);
+    setContextMenuState({ messageId, position: { x: e.clientX, y: e.clientY } });
+  }, []);
 
-  const handleReactionClick = useCallback(
-    (messageId: string, e?: React.MouseEvent) => {
-      setContextMenuState(null);
-      const x = e ? e.clientX : window.innerWidth / 2;
-      const y = e ? Math.max(e.clientY - 56, 80) : 120;
-      setReactionPicker({ messageId, position: { x, y } });
-    },
-    []
-  );
+  const handleReactionClick = useCallback((messageId: string, e?: React.MouseEvent) => {
+    setContextMenuState(null);
+    const x = e ? e.clientX : window.innerWidth / 2;
+    const y = e ? Math.max(e.clientY - 56, 80) : 120;
+    setReactionPicker({ messageId, position: { x, y } });
+  }, []);
 
   return (
     <motion.div
-      className="flex flex-col h-full"
-      style={{ background: "var(--md-sys-color-background)" }}
+      className="gm-chat-window flex h-full flex-col overflow-hidden md:rounded-[36px]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.15 }}
+      transition={{ duration: 0.18 }}
     >
-      {/* App bar */}
-      <header
-        className="flex items-center gap-2 px-2 shrink-0"
-        style={{
-          height: 64,
-          background: "var(--md-sys-color-surface)",
-          borderBottom: "1px solid var(--md-sys-color-outline-variant)",
-        }}
-      >
-        {/* Back button (mobile only) */}
-        <button
-          className="md:hidden w-10 h-10 rounded-full flex items-center justify-center hover:bg-[var(--md-sys-color-surface-container-high)] transition-colors shrink-0"
-          onClick={handleBack}
-          aria-label="Back"
-          style={{ color: "var(--md-sys-color-on-surface-variant)" }}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: 24 }} aria-hidden="true">
-            arrow_back
-          </span>
-        </button>
+      <header className="gm-chat-appbar flex shrink-0 items-center gap-2 px-3">
+        <md-icon-button className="md:hidden" onClick={handleBack} aria-label="Back">
+          <md-icon>arrow_back</md-icon>
+        </md-icon-button>
 
-        {/* Avatar + name */}
-        <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           {conversation && (
             <Avatar
               name={conversation.name ?? ""}
               initials={conversation.initials ?? ""}
               avatarColor={conversation.avatarColor}
               avatar={conversation.avatar}
-              size={40}
+              size={46}
               isGroup={conversation.isGroup}
             />
           )}
-          <div className="flex flex-col min-w-0">
-            <span
-              className="font-medium truncate"
-              style={{ fontSize: 16, color: "var(--md-sys-color-on-surface)" }}
-            >
-              {conversation?.name ?? "Loading..."}
-            </span>
-            {conversation?.phone && (
-              <span
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h2
                 className="truncate"
-                style={{ fontSize: 12, color: "var(--md-sys-color-on-surface-variant)" }}
+                style={{
+                  fontSize: 18,
+                  fontWeight: 800,
+                  letterSpacing: "-0.02em",
+                  color: "var(--md-sys-color-on-surface)",
+                }}
               >
-                {conversation.phone}
-              </span>
-            )}
+                {conversation?.name ?? "Loading..."}
+              </h2>
+              {conversation?.pinned && <md-icon style={{ fontSize: 17 }}>push_pin</md-icon>}
+            </div>
+            <p
+              className="truncate"
+              style={{ color: "var(--md-sys-color-on-surface-variant)", fontSize: 12, fontWeight: 600 }}
+            >
+              {conversation?.phone ?? "Material 3 Web conversation"}
+            </p>
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="flex items-center gap-1 shrink-0">
-          <button
-            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-[var(--md-sys-color-surface-container-high)] transition-colors"
-            aria-label="Voice call"
-            style={{ color: "var(--md-sys-color-on-surface-variant)" }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 22 }} aria-hidden="true">
-              call
-            </span>
-          </button>
-          <button
-            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-[var(--md-sys-color-surface-container-high)] transition-colors"
-            aria-label="Video call"
-            style={{ color: "var(--md-sys-color-on-surface-variant)" }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 22 }} aria-hidden="true">
-              videocam
-            </span>
-          </button>
-          <button
-            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-[var(--md-sys-color-surface-container-high)] transition-colors"
-            aria-label="More options"
-            style={{ color: "var(--md-sys-color-on-surface-variant)" }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 22 }} aria-hidden="true">
-              more_vert
-            </span>
-          </button>
+        <div className="flex shrink-0 items-center gap-1">
+          <md-icon-button aria-label="Voice call">
+            <md-icon>call</md-icon>
+          </md-icon-button>
+          <md-icon-button aria-label="Video call">
+            <md-icon>videocam</md-icon>
+          </md-icon-button>
+          <md-icon-button aria-label="More options">
+            <md-icon>more_vert</md-icon>
+          </md-icon-button>
         </div>
       </header>
 
-      {/* Message list */}
       <MessageList
         conversationId={conversationId}
         onContextMenu={handleContextMenu}
         onReactionClick={handleReactionClick}
       />
 
-      {/* Composer */}
       <MessageComposer conversationId={conversationId} />
 
-      {/* Context menu portal */}
       <AnimatePresence>
         {contextMenuState && contextMessage && (
           <ContextMenu
@@ -206,7 +156,6 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
         )}
       </AnimatePresence>
 
-      {/* Reaction picker portal */}
       <AnimatePresence>
         {reactionPicker && (
           <ReactionPicker
