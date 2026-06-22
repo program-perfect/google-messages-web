@@ -1,21 +1,28 @@
 "use client";
 
-type Item = { id: string; name: string; lastMessage: string };
+type RowData = {
+  id: string;
+  name: string;
+  lastMessage: string;
+};
 
 interface Props {
-  item: Item;
-  active: boolean;
-  onOpen: (id: string) => void;
+  conversation: RowData;
+  isActive: boolean;
+  onSelect: (id: string) => void;
+  onContextMenu?: unknown;
 }
 
-export function ConversationItem({ item, active, onOpen }: Props) {
+export function ConversationItem(props: Props) {
+  const row = props.conversation;
+
   return (
     <button
-      className={"gm-conversation-item w-full p-4 text-left " + (active ? "active" : "")}
-      onClick={() => onOpen(item.id)}
+      className={"gm-conversation-item w-full p-4 text-left " + (props.isActive ? "active" : "")}
+      onClick={() => props.onSelect(row.id)}
     >
-      <div>{item.name}</div>
-      <div>{item.lastMessage}</div>
+      <div>{row.name}</div>
+      <div>{row.lastMessage}</div>
     </button>
   );
 }
