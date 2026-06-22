@@ -4,14 +4,14 @@ import { useEffect, useRef, useCallback } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import { useChatStore } from "@/store/useChatStore";
-import { apiGetMessages } from "@/services/mockApi";
+import { fetchMessages } from "@/services/mockApi";
 import { idbGetMessages, idbPutMessages } from "@/lib/idb";
 import { MessageBubble } from "./MessageBubble";
 import { DateSeparator } from "./DateSeparator";
 import { TypingIndicator } from "./TypingIndicator";
 import { MessageListSkeleton } from "@/components/ui/Skeleton";
 import { getDateKey, shouldGroupWithPrevious } from "@/lib/dateUtils";
-import type { Message } from "@/types";
+import type { Message } from "@/types/global";
 
 interface MessageListProps {
   conversationId: string;

@@ -4,8 +4,8 @@ import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { useChatStore } from "@/store/useChatStore";
-import { apiDeleteMessage } from "@/services/mockApi";
-import type { Message } from "@/types";
+import { deleteMessage } from "@/services/mockApi";
+import type { Message } from "@/types/global";
 
 interface ContextMenuProps {
   message: Message;
@@ -17,7 +17,7 @@ interface ContextMenuProps {
 export function ContextMenu({ message, position, onClose, onReact }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
-  const updateMessage = useChatStore((s) => s.updateMessage);
+  const patchMessage = useChatStore((s) => s.patchMessage);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -43,8 +43,8 @@ export function ContextMenu({ message, position, onClose, onReact }: ContextMenu
   const adjustedY = Math.min(position.y, window.innerHeight - menuHeight - 8);
 
   async function handleDelete() {
-    updateMessage(message.id, message.conversationId, { isDeleted: true });
-    await apiDeleteMessage(message.conversationId, message.id);
+    patchMessage(message.id, message.conversationId, { isDeleted: true });
+    await deleteMessage(message.id, message.conversationId);
     queryClient.invalidateQueries({ queryKey: ["messages", message.conversationId] });
     onClose();
   }

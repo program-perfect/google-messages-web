@@ -4,13 +4,13 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useChatStore } from "@/store/useChatStore";
-import { apiGetConversation } from "@/services/mockApi";
+import { fetchConversation } from "@/services/mockApi";
 import { Avatar } from "@/components/ui/Avatar";
 import { MessageList } from "./MessageList";
 import { MessageComposer } from "./MessageComposer";
 import { ContextMenu } from "./ContextMenu";
 import { ReactionPicker } from "./ReactionPicker";
-import type { Message } from "@/types";
+import type { Message } from "@/types/global";
 
 interface ChatWindowProps {
   conversationId: string;
@@ -33,7 +33,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
 
   const { data: conversation } = useQuery({
     queryKey: ["conversation", conversationId],
-    queryFn: () => apiGetConversation(conversationId),
+    queryFn: () => fetchConversation(conversationId),
     staleTime: 30_000,
   });
 

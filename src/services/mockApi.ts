@@ -267,7 +267,42 @@ export async function simulateIncomingMessage(
   onMessage({ ...msg });
 }
 
+// ── Pagination wrapper for MessageList ───────────────────────────────────────
+
+export async function apiGetMessages(
+  conversationId: string,
+  cursor?: string,
+  limit = 30
+): Promise<{ messages: Message[]; hasMore: boolean; nextCursor: string | null }> {
+  await jitter();
+  const all = (_messages[conversationId] ?? []).map((m) => ({ ...m }));
+
+  if (!cursor) {
+    // First page: latest `limit` messages
+    const slice = all.slice(Math.max(0, all.length - limit));
+    const hasMore = all.length > limit;
+    const nextCursor = hasMore ? all[Math.max(0, all.length - limit - 1)]?.id ?? null : null;
+    return { messages: slice, hasMore, nextCursor };
+  }
+
+  // Cursor-based pagination: load `limit` messages before the cursor message
+  const cursorIdx = all.findIndex((m) => m.id === cursor);
+  if (cursorIdx <= 0) return { messages: [], hasMore: false, nextCursor: null };
+  const slice = all.slice(Math.max(0, cursorIdx - limit), cursorIdx);
+  const hasMore = cursorIdx - limit > 0;
+  const nextCursor = hasMore ? all[Math.max(0, cursorIdx - limit - 1)]?.id ?? null : null;
+  return { messages: slice, hasMore, nextCursor };
+}
+
+export async function apiGetConversation(id: string): Promise<Conversation | null> {
+  return fetchConversation(id);
+}
+
 // ── Search ────────────────────────────────────────────────────────────────────
+
+export async function apiSearch(query: string): Promise<SearchResult[]> {
+  return searchAll(query);
+}
 
 export async function searchAll(query: string): Promise<SearchResult[]> {
   await jitter(200, 500);
