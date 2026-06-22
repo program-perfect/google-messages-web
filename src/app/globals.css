@@ -24,3 +24,67 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Append these rules to src/app/globals.css for the follow-up M3 Expressive commit. */
+
+.gm-composer-card {
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px;
+}
+
+.gm-composer-card md-icon-button {
+  --md-icon-button-icon-color: var(--md-sys-color-on-surface-variant);
+}
+
+.gm-composer-card md-fab {
+  --md-fab-container-shape: 20px;
+  filter: drop-shadow(0 10px 22px color-mix(in srgb, var(--gm-expressive-coral) 24%, transparent));
+}
+
+.gm-composer-field {
+  min-width: 0;
+  flex: 1;
+  --md-filled-text-field-container-height: 52px;
+  --md-filled-text-field-container-color: color-mix(in srgb, var(--md-sys-color-surface-container-lowest) 82%, transparent);
+  --md-filled-text-field-container-shape: 26px;
+  --md-filled-text-field-input-text-size: 15px;
+  --md-filled-text-field-label-text-size: 15px;
+}
+
+.gm-conversation-list {
+  display: block;
+  padding: 8px;
+  background: transparent;
+}
+
+.gm-conversation-item {
+  --md-list-item-container-shape: 28px;
+  --md-list-item-leading-space: 14px;
+  --md-list-item-trailing-space: 14px;
+  --md-list-item-top-space: 12px;
+  --md-list-item-bottom-space: 12px;
+  --md-list-item-one-line-container-height: 82px;
+  --md-list-item-two-line-container-height: 82px;
+  margin: 4px 0;
+}
+
+.gm-conversation-item::part(container) {
+  border-radius: 28px;
+}
+
+.gm-conversation-item .gm-list-avatar {
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.gm-reaction-chip {
+  --md-assist-chip-container-color: color-mix(in srgb, var(--md-sys-color-surface-container-high) 84%, transparent);
+  --md-assist-chip-label-text-color: var(--md-sys-color-on-surface);
+  --md-assist-chip-container-shape: 999px;
+  --md-assist-chip-container-height: 30px;
+  --md-assist-chip-outline-color: color-mix(in srgb, var(--md-sys-color-outline-variant) 70%, transparent);
+  box-shadow: var(--gm-shadow-1);
+}

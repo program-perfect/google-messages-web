@@ -1,0 +1,231 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
+import { useChatStore } from "@/store/useChatStore";
+import {
+  archiveConversation,
+  deleteConversation,
+  fetchConversations,
+  markConversationRead,
+  pinConversation,
+  unarchiveConversation,
+  unpinConversation,
+} from "@/services/mockApi";
+import { idbGetAllConversations, idbPutConversations } from "@/lib/idb";
+import { ConversationListSkeleton } from "@/components/ui/Skeleton";
+import type { Conversation } from "@/types/global";
+import { ConversationItem } from "./ConversationItem";
+
+const EMPTY_CONVERSATIONS: Conversation[] = [];
+
+interface ConvContextMenuProps {
+  conversationId: string;
+  position: { x: number; y: number };
+  onClose: () => void;
+  conv: Conversation;
+}
+
+function ConvContextMenu({ conversationId, position, onClose, conv }: ConvContextMenuProps) {
+  const queryClient = useQueryClient();
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [onClose]);
+
+  async function handlePin() {
+    if (conv.pinned) await unpinConversation(conversationId);
+    else await pinConversation(conversationId);
+    queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    onClose();
+  }
+
+  async function handleArchive() {
+    if (conv.archived) await unarchiveConversation(conversationId);
+    else await archiveConversation(conversationId);
+    queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    onClose();
+  }
+
+  async function handleMarkRead() {
+    await markConversationRead(conversationId);
+    queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    onClose();
+  }
+
+  async function handleDelete() {
+    await deleteConversation(conversationId);
+    queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    onClose();
+  }
+
+  const style: React.CSSProperties = {
+    left: Math.min(position.x, window.innerWidth - 220),
+    position: "fixed",
+    top: Math.min(position.y, window.innerHeight - 230),
+    zIndex: 9999,
+  };
+
+  const menuItems = [
+    { icon: "push_pin", label: conv.pinned ? "Unpin" : "Pin", onClick: handlePin },
+    { icon: conv.archived ? "unarchive" : "archive", label: conv.archived ? "Unarchive" : "Archive", onClick: handleArchive },
+    { icon: "done_all", label: "Mark as read", onClick: handleMarkRead },
+    { icon: "delete", label: "Delete", onClick: handleDelete, danger: true },
+  ];
+
+  return (
+    <motion.div
+      ref={menuRef}
+      initial={{ opacity: 0, scale: 0.92, y: -4 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.92, y: -4 }}
+      transition={{ duration: 0.12 }}
+      className="gm-context-menu elevation-3 min-w-[190px] overflow-hidden py-2"
+      role="menu"
+      aria-label="Conversation options"
+      style={style}
+    >
+      {menuItems.map((item) => (
+        <button
+          key={item.label}
+          onClick={item.onClick}
+          className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--md-sys-color-surface-container-highest)]"
+          style={{
+            color: item.danger ? "var(--md-sys-color-error)" : "var(--md-sys-color-on-surface)",
+            fontSize: 14,
+          }}
+          role="menuitem"
+        >
+          <md-icon style={{ color: "inherit", fontSize: 20 }}>{item.icon}</md-icon>
+          {item.label}
+        </button>
+      ))}
+    </motion.div>
+  );
+}
+
+export function ConversationList() {
+  const activeConversationId = useChatStore((s) => s.activeConversationId);
+  const activeTab = useChatStore((s) => s.activeTab);
+
+  const [contextMenu, setContextMenu] = useState<{
+    conversationId: string;
+    position: { x: number; y: number };
+    conv: Conversation;
+  } | null>(null);
+
+  const isArchived = activeTab === "archived";
+
+  const { data: conversations, isLoading } = useQuery({
+    queryKey: ["conversations"],
+    queryFn: async () => {
+      try {
+        const data = await fetchConversations();
+        await idbPutConversations(data);
+        return data;
+      } catch {
+        return idbGetAllConversations();
+      }
+    },
+    placeholderData: EMPTY_CONVERSATIONS,
+  });
+
+  const displayConversations = (conversations ?? [])
+    .filter((c) => {
+      if (activeTab === "pinned") return c.pinned && !c.archived;
+      if (activeTab === "archived") return c.archived;
+      return !c.archived;
+    })
+    .sort((a, b) => {
+      if (activeTab === "messages") {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+      }
+
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+
+  function handleSelectConversation(id: string) {
+    const { setActiveConversationId, setSidebarOpen } = useChatStore.getState();
+    setActiveConversationId(id);
+
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  }
+
+  function handleContextMenu(convId: string, e: React.MouseEvent) {
+    const conv = displayConversations.find((c) => c.id === convId);
+    if (!conv) return;
+
+    setContextMenu({
+      conversationId: convId,
+      position: { x: e.clientX, y: e.clientY },
+      conv,
+    });
+  }
+
+  if (isLoading) return <ConversationListSkeleton />;
+
+  if (!displayConversations.length) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 py-12">
+        <md-icon
+          style={{ color: "var(--md-sys-color-outline)", fontSize: 64 }}
+          aria-hidden="true"
+        >
+          {isArchived ? "archive" : activeTab === "pinned" ? "push_pin" : "chat_bubble_outline"}
+        </md-icon>
+        <p
+          className="text-center"
+          style={{ color: "var(--md-sys-color-on-surface-variant)", fontSize: 14 }}
+        >
+          {isArchived
+            ? "No archived conversations"
+            : activeTab === "pinned"
+              ? "No pinned conversations"
+              : "No messages yet"}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative flex-1 overflow-y-auto pb-20">
+      <md-list className="gm-conversation-list" aria-label="Conversations">
+        <AnimatePresence initial={false}>
+          {displayConversations.map((conv) => (
+            <ConversationItem
+              key={conv.id}
+              conversation={conv}
+              isActive={activeConversationId === conv.id}
+              onSelect={handleSelectConversation}
+              onContextMenu={handleContextMenu}
+            />
+          ))}
+        </AnimatePresence>
+      </md-list>
+
+      <AnimatePresence>
+        {contextMenu && (
+          <ConvContextMenu
+            key="conv-context-menu"
+            conversationId={contextMenu.conversationId}
+            position={contextMenu.position}
+            onClose={() => setContextMenu(null)}
+            conv={contextMenu.conv}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

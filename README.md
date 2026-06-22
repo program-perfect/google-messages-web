@@ -34,3 +34,26 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+=======
+# M3 Expressive follow-up patch
+
+Apply these files to branch `m3-expressive-web-rewrite`.
+
+Replaces:
+
+- `src/components/chat/MessageComposer.tsx`
+- `src/components/chat/MessageBubble.tsx`
+- `src/components/conversations/ConversationItem.tsx`
+- `src/components/conversations/ConversationList.tsx`
+
+Append:
+
+- `src/app/globals.followup.css` → append to the bottom of `src/app/globals.css`
+
+After applying:
+
+```bash
+npm run build
+```
+
+I could not push this directly to GitHub from this environment because the GitHub write action was blocked. The code is prepared as a clean replacement patch.
