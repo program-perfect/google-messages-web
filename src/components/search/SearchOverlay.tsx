@@ -39,8 +39,6 @@ function highlightMatch(text: string, query: string): React.ReactNode {
 export function SearchOverlay({ onClose }: SearchOverlayProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
-  const setActiveConversationId = useChatStore((s) => s.setActiveConversationId);
-  const setSidebarOpen = useChatStore((s) => s.setSidebarOpen);
 
   // Focus input on mount
   useEffect(() => {
@@ -64,8 +62,8 @@ export function SearchOverlay({ onClose }: SearchOverlayProps) {
   });
 
   function handleResultClick(result: SearchResult) {
-    setActiveConversationId(result.conversationId);
-    if (window.innerWidth < 768) setSidebarOpen(false);
+    useChatStore.getState().setActiveConversationId(result.conversationId);
+    if (window.innerWidth < 768) useChatStore.getState().setSidebarOpen(false);
     onClose();
   }
 

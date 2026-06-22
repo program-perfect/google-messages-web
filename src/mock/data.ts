@@ -23,7 +23,7 @@ export const MOCK_CONVERSATIONS: Conversation[] = [
     avatarColor: AVATAR_COLORS[2],
     initials: "M",
     phone: "+1 (555) 001-0001",
-    lastMessage: "Don't forget dinner on Sunday! We're having your favorite pasta.",
+    lastMessage: "You: Sounds amazing, can't wait to see you!",
     updatedAt: subMinutes(now, 3).toISOString(),
     pinned: true,
     archived: false,
@@ -38,7 +38,7 @@ export const MOCK_CONVERSATIONS: Conversation[] = [
     avatarColor: AVATAR_COLORS[1],
     initials: "AJ",
     phone: "+1 (555) 002-0002",
-    lastMessage: "The meeting got pushed to 3pm tomorrow",
+    lastMessage: "You: Got it, I'll rearrange my afternoon",
     updatedAt: subMinutes(now, 27).toISOString(),
     pinned: true,
     archived: false,
@@ -231,6 +231,10 @@ export const MOCK_MESSAGES: Record<string, Message[]> = {
     makeMsg("m1-7", "conv-1", "That's wonderful!! I'm so excited to see you!", "incoming", 2870),
     makeMsg("m1-8", "conv-1", "Don't forget dinner on Sunday! We're having your favorite pasta.", "incoming", 5),
     makeMsg("m1-9", "conv-1", "I'll be there! Can't wait 😊", "incoming", 3, "delivered"),
+    {
+      ...makeMsg("m1-10", "conv-1", "Sounds amazing, can't wait to see you!", "outgoing", 1, "read"),
+      replyTo: "m1-8",
+    },
   ],
   "conv-2": [
     makeMsg("m2-1", "conv-2", "Hey, did you get a chance to look at the proposal?", "incoming", 200),
@@ -240,6 +244,10 @@ export const MOCK_MESSAGES: Record<string, Message[]> = {
     makeMsg("m2-5", "conv-2", "Good point. I'll update it and send again", "incoming", 180),
     makeMsg("m2-6", "conv-2", "Sounds good. Let me know when it's ready", "outgoing", 175),
     makeMsg("m2-7", "conv-2", "The meeting got pushed to 3pm tomorrow", "incoming", 27),
+    {
+      ...makeMsg("m2-8r", "conv-2", "Got it, I'll rearrange my afternoon", "outgoing", 20, "read"),
+      replyTo: "m2-7",
+    },
   ],
   "conv-3": [
     makeMsg("m3-1", "conv-3", "Good morning team! Ready for the sprint review?", "incoming", 480),

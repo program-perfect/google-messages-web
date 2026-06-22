@@ -18,6 +18,8 @@ import { ConversationListSkeleton } from "@/components/ui/Skeleton";
 import type { Conversation } from "@/types/global";
 import { useEffect, useRef, useState } from "react";
 
+const EMPTY_CONVERSATIONS: Conversation[] = [];
+
 // ── Context menu for conversation list item ───────────────────────────────
 
 interface ConvContextMenuProps {
@@ -85,7 +87,6 @@ function ConvContextMenu({ conversationId, position, onClose, conv }: ConvContex
   return (
     <motion.div
       ref={menuRef}
-      style={style}
       initial={{ opacity: 0, scale: 0.92, y: -4 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: -4 }}
@@ -129,13 +130,12 @@ function ConvContextMenu({ conversationId, position, onClose, conv }: ConvContex
 
 export function ConversationList() {
   const activeConversationId = useChatStore((s) => s.activeConversationId);
-  const setActiveConversationId = useChatStore((s) => s.setActiveConversationId);
-  const setSidebarOpen = useChatStore((s) => s.setSidebarOpen);
   const activeTab = useChatStore((s) => s.activeTab);
 
   const [contextMenu, setContextMenu] = useState<{
     conversationId: string;
     position: { x: number; y: number };
+    conv: Conversation;
   } | null>(null);
 
   const isArchived = activeTab === "archived";
@@ -152,7 +152,7 @@ export function ConversationList() {
         return idbGetAllConversations();
       }
     },
-    placeholderData: [],
+    placeholderData: EMPTY_CONVERSATIONS,
   });
 
   // Filter and sort by tab
@@ -171,6 +171,7 @@ export function ConversationList() {
     });
 
   function handleSelectConversation(id: string) {
+    const { setActiveConversationId, setSidebarOpen } = useChatStore.getState();
     setActiveConversationId(id);
     // On mobile, hide sidebar when conversation selected
     if (window.innerWidth < 768) {
@@ -179,15 +180,14 @@ export function ConversationList() {
   }
 
   function handleContextMenu(convId: string, e: React.MouseEvent) {
+    const conv = displayConversations.find((c) => c.id === convId);
+    if (!conv) return;
     setContextMenu({
       conversationId: convId,
       position: { x: e.clientX, y: e.clientY },
+      conv,
     });
   }
-
-  const contextConv = contextMenu
-    ? displayConversations.find((c) => c.id === contextMenu.conversationId)
-    : null;
 
   if (isLoading) return <ConversationListSkeleton />;
 
@@ -216,7 +216,7 @@ export function ConversationList() {
   }
 
   return (
-    <div className="relative flex-1 overflow-y-auto" role="list" aria-label="Conversations">
+    <div className="relative flex-1 overflow-y-auto pb-20" role="list" aria-label="Conversations">
       <AnimatePresence initial={false}>
         {displayConversations.map((conv) => (
           <ConversationItem
@@ -231,13 +231,13 @@ export function ConversationList() {
 
       {/* Context menu portal */}
       <AnimatePresence>
-        {contextMenu && contextConv && (
+        {contextMenu && (
           <ConvContextMenu
             key="conv-context-menu"
             conversationId={contextMenu.conversationId}
             position={contextMenu.position}
             onClose={() => setContextMenu(null)}
-            conv={contextConv}
+            conv={contextMenu.conv}
           />
         )}
       </AnimatePresence>

@@ -5,9 +5,8 @@ import { useChatStore } from "@/store/useChatStore";
 
 /** Listens to browser online/offline events and syncs the store. */
 export default function OfflineWatcher() {
-  const setIsOffline = useChatStore((s) => s.setIsOffline);
-
   useEffect(() => {
+    const { setIsOffline } = useChatStore.getState();
     const onOnline = () => setIsOffline(false);
     const onOffline = () => setIsOffline(true);
 
@@ -19,7 +18,7 @@ export default function OfflineWatcher() {
       window.removeEventListener("online", onOnline);
       window.removeEventListener("offline", onOffline);
     };
-  }, [setIsOffline]);
+  }, []);
 
   return null;
 }
