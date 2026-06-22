@@ -13,79 +13,32 @@ export function AppShell() {
   const activeConversationId = useChatStore((s) => s.activeConversationId);
   const sidebarOpen = useChatStore((s) => s.sidebarOpen);
 
-  // Global keyboard shortcuts
   useEffect(() => {
     const setSearchOpen = useChatStore.getState().setSearchOpen;
-    const setActiveConversationId =
-      useChatStore.getState().setActiveConversationId;
+    const setActiveConversationId = useChatStore.getState().setActiveConversationId;
 
     function onKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement;
       const isInput =
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
+        target.tagName.includes("MD-") ||
         target.isContentEditable;
 
-      // Ctrl/Cmd + F → open search
       if ((e.ctrlKey || e.metaKey) && e.key === "f") {
         e.preventDefault();
         setSearchOpen(true);
         return;
       }
 
-      // Escape → close search or deselect conversation on mobile
       if (e.key === "Escape" && !isInput) {
         const state = useChatStore.getState();
         if (state.searchOpen) {
           setSearchOpen(false);
-        } else if (
-          state.activeConversationId &&
-          window.innerWidth < 768
-        ) {
+        } else if (state.activeConversationId && window.innerWidth < 768) {
           setActiveConversationId(null);
           useChatStore.getState().setSidebarOpen(true);
         }
-        return;
-      }
-
-      // Alt + ArrowUp / ArrowDown → navigate conversations
-      if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
-        e.preventDefault();
-        const state = useChatStore.getState();
-        const { conversations, activeConversationId: currentId, activeTab } = state;
-
-        const visible = conversations
-          .filter((c) => {
-            if (activeTab === "pinned") return c.pinned && !c.archived;
-            if (activeTab === "archived") return c.archived;
-            return !c.archived;
-          })
-          .sort((a, b) => {
-            if (activeTab === "messages") {
-              if (a.pinned && !b.pinned) return -1;
-              if (!a.pinned && b.pinned) return 1;
-            }
-            return (
-              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-            );
-          });
-
-        if (!visible.length) return;
-
-        const idx = visible.findIndex((c) => c.id === currentId);
-        let nextIdx: number;
-        if (e.key === "ArrowDown") {
-          nextIdx = idx === -1 ? 0 : Math.min(idx + 1, visible.length - 1);
-        } else {
-          nextIdx = idx === -1 ? visible.length - 1 : Math.max(idx - 1, 0);
-        }
-
-        const next = visible[nextIdx];
-        if (next) {
-          setActiveConversationId(next.id);
-          if (window.innerWidth < 768) useChatStore.getState().setSidebarOpen(false);
-        }
-        return;
       }
     }
 
@@ -93,7 +46,6 @@ export function AppShell() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  // Responsive: on resize to desktop, always show sidebar
   useEffect(() => {
     function onResize() {
       if (window.innerWidth >= 768) {
@@ -105,58 +57,41 @@ export function AppShell() {
   }, []);
 
   return (
-    <div
-      className="flex h-screen overflow-hidden font-sans"
-      style={{ background: "var(--md-sys-color-background)" }}
-    >
-      {/* Navigation rail — tablet/desktop (md+) */}
+    <div className="gm-shell flex h-screen overflow-hidden font-sans">
       <NavigationRail />
 
-      {/*
-        Column wrapper: horizontal split-view on top, bottom nav bar on mobile
-      */}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        {/*
-          Split-view row
-          - Mobile:  sidebar overlays chat (one panel visible at a time)
-          - Desktop: sidebar + chat side by side
-        */}
-        <div className="flex flex-1 overflow-hidden relative">
-
-          {/* Sidebar panel */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden p-0 md:p-3 md:pl-0">
+        <div className="relative flex flex-1 overflow-hidden md:gap-3">
           <AnimatePresence initial={false}>
             {(sidebarOpen || typeof window === "undefined") && (
-              <motion.div
+              <motion.aside
                 key="sidebar"
-                className="flex flex-col overflow-hidden"
+                className="gm-sidebar-shell flex flex-col overflow-hidden md:rounded-[36px]"
                 style={{
                   width: "100%",
-                  maxWidth: 400,
-                  minWidth: 280,
-                  borderRight:
-                    "1px solid var(--md-sys-color-outline-variant)",
+                  maxWidth: 432,
+                  minWidth: 292,
                 }}
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -20, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 40 }}
+                initial={{ x: -24, opacity: 0, scale: 0.98 }}
+                animate={{ x: 0, opacity: 1, scale: 1 }}
+                exit={{ x: -24, opacity: 0, scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 360, damping: 36 }}
               >
                 <Sidebar />
-              </motion.div>
+              </motion.aside>
             )}
           </AnimatePresence>
 
-          {/* Chat panel */}
-          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          <main className="flex min-w-0 flex-1 flex-col overflow-hidden md:rounded-[36px]">
             <AnimatePresence mode="wait">
               {activeConversationId ? (
                 <motion.div
                   key={activeConversationId}
-                  className="flex-1 flex flex-col overflow-hidden"
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 12 }}
-                  transition={{ duration: 0.18 }}
+                  className="flex flex-1 flex-col overflow-hidden"
+                  initial={{ opacity: 0, x: 16, scale: 0.992 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 16, scale: 0.992 }}
+                  transition={{ duration: 0.24, ease: [0.2, 0, 0, 1] }}
                   style={{ height: "100%" }}
                 >
                   <ChatWindow conversationId={activeConversationId} />
@@ -164,18 +99,16 @@ export function AppShell() {
               ) : (
                 <motion.div
                   key="empty"
-                  className="flex-1 flex flex-col overflow-hidden"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
+                  className="flex flex-1 flex-col overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.22 }}
                   style={{ height: "100%" }}
                 >
                   <div
                     className={`h-full ${
-                      !activeConversationId && sidebarOpen
-                        ? "hidden md:flex"
-                        : "flex"
+                      !activeConversationId && sidebarOpen ? "hidden md:flex" : "flex"
                     } flex-col`}
                   >
                     <EmptyState />
@@ -183,10 +116,9 @@ export function AppShell() {
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
+          </main>
         </div>
 
-        {/* Bottom navigation bar — mobile only */}
         <BottomNavBar />
       </div>
     </div>

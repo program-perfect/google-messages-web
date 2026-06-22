@@ -1,20 +1,20 @@
 import type { Metadata, Viewport } from "next";
 import { Roboto } from "next/font/google";
-import Script from "next/script";
 import { Providers } from "./providers";
 import { MWCLoader } from "@/components/MWCLoader";
 import "./globals.css";
 
 const roboto = Roboto({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "700"],
+  subsets: ["latin", "cyrillic"],
+  weight: ["300", "400", "500", "700", "900"],
   variable: "--font-roboto",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Messages",
-  description: "Send and receive SMS/MMS from your computer — Google Messages Web clone",
+  title: "Messages Expressive",
+  description:
+    "Google Messages Web UI clone rebuilt with Material 3 Web Components and M3 Expressive styling.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -35,7 +35,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#1b6ef3",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fff2ff" },
+    { media: "(prefers-color-scheme: dark)", color: "#17071f" },
+  ],
 };
 
 export default function RootLayout({
@@ -46,30 +49,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={roboto.variable}>
       <head>
-        {/* Material Symbols Outlined font */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-        />
-        {/* PWA Service Worker Registration */}
-        <Script
-          id="register-sw"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                  navigator.serviceWorker.register('/sw.js').catch(() => {});
-                });
-              }
-            `,
-          }}
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         />
       </head>
       <body className="h-full overflow-hidden">
-          <MWCLoader />
-          <Providers>{children}</Providers>
-        </body>
+        <MWCLoader />
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
