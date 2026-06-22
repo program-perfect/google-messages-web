@@ -32,6 +32,8 @@ export function MessageList({
   const typingConversationIds = useChatStore((s) => s.typingConversationIds);
   const isTyping = typingConversationIds.has(conversationId);
 
+  const PAGE_SIZE = 30;
+
   const {
     data,
     fetchNextPage,
@@ -42,20 +44,24 @@ export function MessageList({
     queryKey: ["messages", conversationId],
     queryFn: async ({ pageParam }) => {
       try {
-        const result = await apiGetMessages(
-          conversationId,
-          pageParam as string | undefined,
-          30
+        const all = await fetchMessages(conversationId);
+        await idbPutMessages(all);
+        // Client-side pagination: newest messages first in pages
+        const offset = (pageParam as number) ?? 0;
+        const slice = all.slice(
+          Math.max(0, all.length - PAGE_SIZE - offset),
+          all.length - offset
         );
-        await idbPutMessages(result.messages);
-        return result;
+        const hasMore = all.length - PAGE_SIZE - offset > 0;
+        return { messages: slice, hasMore, nextOffset: offset + PAGE_SIZE };
       } catch {
         const cached = await idbGetMessages(conversationId);
-        return { messages: cached, hasMore: false, nextCursor: null };
+        return { messages: cached, hasMore: false, nextOffset: PAGE_SIZE };
       }
     },
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    initialPageParam: 0 as number,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.nextOffset : undefined,
     staleTime: 10_000,
   });
 
