@@ -1,3 +1,5 @@
+import type { HTMLAttributes, RefObject } from "react";
+
 // ---------------------------------------------------------------------------
 // Data model types
 // ---------------------------------------------------------------------------
@@ -54,13 +56,13 @@ export interface SearchResult {
 // ---------------------------------------------------------------------------
 
 type MWCProps<T extends Record<string, unknown> = Record<string, unknown>> =
-  React.HTMLAttributes<HTMLElement> &
+  HTMLAttributes<HTMLElement> &
     T & {
       class?: string;
-      ref?: React.RefObject<HTMLElement | null>;
+      ref?: RefObject<HTMLElement | null>;
     };
 
-declare namespace React {
+declare global {
   namespace JSX {
     interface IntrinsicElements {
       "md-icon": MWCProps;
