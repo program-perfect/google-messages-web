@@ -1,4 +1,4 @@
-import type { HTMLAttributes, RefObject } from "react";
+import type { HTMLAttributes, Key, RefObject } from "react";
 
 // ---------------------------------------------------------------------------
 // Data model types
@@ -60,6 +60,7 @@ export interface SearchResult {
 type MWCProps<T extends Record<string, unknown> = Record<string, unknown>> =
   HTMLAttributes<HTMLElement> &
     T & {
+      key?: Key;
       class?: string;
       ref?: RefObject<HTMLElement | null>;
     };
