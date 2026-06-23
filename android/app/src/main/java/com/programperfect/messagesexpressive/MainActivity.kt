@@ -67,7 +67,6 @@ import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -312,7 +311,7 @@ private fun PhoneMessengerShell(
                     onClick = {},
                     containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                     contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                    shape = ShapeDefaults.ExtraLarge
+                    shape = RoundedCornerShape(28.dp)
                 ) {
                     Icon(Icons.Rounded.Edit, contentDescription = "New chat")
                 }
@@ -339,7 +338,7 @@ private fun PhoneMessengerShell(
                     )
                 }
             },
-            contentWindowInsets = WindowInsets(0.dp)
+            contentWindowInsets = WindowInsets(left = 0.dp, top = 0.dp, right = 0.dp, bottom = 0.dp)
         ) { padding ->
             ConversationListScreen(
                 modifier = Modifier.padding(padding),
@@ -579,7 +578,7 @@ private fun ChatScreen(
                 onSend = { composerText = "" }
             )
         },
-        contentWindowInsets = WindowInsets(0.dp)
+        contentWindowInsets = WindowInsets(left = 0.dp, top = 0.dp, right = 0.dp, bottom = 0.dp)
     ) { padding ->
         LazyColumn(
             modifier = Modifier
