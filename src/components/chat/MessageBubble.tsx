@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { formatMessageTime } from "@/lib/dateUtils";
 import type { Message } from "@/types/global";
 
 interface MessageBubbleProps {
@@ -19,6 +18,13 @@ const STATUS_ICONS: Record<string, string> = {
   delivered: "done",
   read: "done_all",
 };
+
+function formatMessageTime(iso: string): string {
+  return new Intl.DateTimeFormat("en", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(iso));
+}
 
 export function MessageBubble({
   message,
