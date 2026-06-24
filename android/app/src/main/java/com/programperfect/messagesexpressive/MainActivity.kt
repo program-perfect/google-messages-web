@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.programperfect.messagesexpressive
 
 import android.os.Bundle
@@ -16,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Archive
@@ -42,6 +45,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -60,12 +64,15 @@ class MainActivity : ComponentActivity() {
 }
 
 private val Violet = Color(0xFF7B2CFF)
+private val ElectricViolet = Color(0xFFB85CFF)
 private val Lilac = Color(0xFFD9B8FF)
+private val SoftLilac = Color(0xFFF1E6FF)
 private val Coral = Color(0xFFFF7D8A)
 private val Cyan = Color(0xFF00A8E8)
 private val Lime = Color(0xFFD8FF6A)
 private val Ink = Color(0xFF241126)
 private val Night = Color(0xFF19051F)
+private val Frost = Color(0xFFFFF7FF)
 
 private val ExpressiveScheme = lightColorScheme(
     primary = Violet,
@@ -82,7 +89,7 @@ private val ExpressiveScheme = lightColorScheme(
     onTertiaryContainer = Color(0xFF3E0012),
     background = Color(0xFFFFF4FF),
     onBackground = Ink,
-    surface = Color(0xFFFFF7FF),
+    surface = Frost,
     onSurface = Ink,
     surfaceVariant = Color(0xFFF1E4F8),
     onSurfaceVariant = Color(0xFF56405F),
@@ -90,19 +97,52 @@ private val ExpressiveScheme = lightColorScheme(
 )
 
 private val ExpressiveShapes = Shapes(
-    extraSmall = RoundedCornerShape(10.dp),
-    small = RoundedCornerShape(18.dp),
-    medium = RoundedCornerShape(28.dp),
-    large = RoundedCornerShape(38.dp),
-    extraLarge = RoundedCornerShape(48.dp)
+    extraSmall = RoundedCornerShape(12.dp),
+    small = RoundedCornerShape(20.dp),
+    medium = RoundedCornerShape(30.dp),
+    large = RoundedCornerShape(40.dp),
+    extraLarge = RoundedCornerShape(54.dp)
+)
+
+private val ExpressiveTypography = Typography(
+    displayLarge = TextStyle(
+        fontSize = 62.sp,
+        lineHeight = 58.sp,
+        fontWeight = FontWeight.Black,
+        letterSpacing = (-3).sp
+    ),
+    headlineLarge = TextStyle(
+        fontSize = 36.sp,
+        lineHeight = 36.sp,
+        fontWeight = FontWeight.Black,
+        letterSpacing = (-1.4).sp
+    ),
+    titleLarge = TextStyle(
+        fontSize = 22.sp,
+        lineHeight = 26.sp,
+        fontWeight = FontWeight.ExtraBold,
+        letterSpacing = (-0.45).sp
+    ),
+    bodyLarge = TextStyle(
+        fontSize = 16.sp,
+        lineHeight = 22.sp,
+        fontWeight = FontWeight.Medium
+    ),
+    labelLarge = TextStyle(
+        fontSize = 14.sp,
+        lineHeight = 18.sp,
+        fontWeight = FontWeight.ExtraBold,
+        letterSpacing = 0.15.sp
+    )
 )
 
 @Composable
 private fun ExpressiveTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
+    MaterialExpressiveTheme(
         colorScheme = ExpressiveScheme,
-        typography = Typography(),
+        motionScheme = MotionScheme.expressive(),
         shapes = ExpressiveShapes,
+        typography = ExpressiveTypography,
         content = content
     )
 }
@@ -119,7 +159,6 @@ private fun MessengerApp() {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .statusBarsPadding()
                     .navigationBarsPadding()
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -127,12 +166,12 @@ private fun MessengerApp() {
                 PixelRail()
                 Surface(
                     modifier = Modifier
-                        .width(436.dp)
+                        .widthIn(min = 380.dp, max = 440.dp)
                         .fillMaxHeight(),
-                    shape = RoundedCornerShape(42.dp),
-                    color = Color.White.copy(alpha = 0.72f),
+                    shape = RoundedCornerShape(46.dp),
+                    color = Color.White.copy(alpha = 0.74f),
                     tonalElevation = 8.dp,
-                    shadowElevation = 10.dp
+                    shadowElevation = 12.dp
                 ) {
                     ConversationList(selectedId = currentId, onSelect = { selectedId = it })
                 }
@@ -140,12 +179,16 @@ private fun MessengerApp() {
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),
-                    shape = RoundedCornerShape(42.dp),
-                    color = Color.White.copy(alpha = 0.74f),
+                    shape = RoundedCornerShape(46.dp),
+                    color = Color.White.copy(alpha = 0.76f),
                     tonalElevation = 10.dp,
-                    shadowElevation = 12.dp
+                    shadowElevation = 14.dp
                 ) {
-                    if (selectedConversation == null) EmptyChatState() else ChatScreen(selectedConversation, null)
+                    if (selectedConversation == null) {
+                        EmptyChatState()
+                    } else {
+                        ChatScreen(item = selectedConversation, onBack = null)
+                    }
                 }
             }
         } else {
@@ -157,8 +200,8 @@ private fun MessengerApp() {
                             onClick = {},
                             containerColor = Coral,
                             contentColor = Ink,
-                            shape = RoundedCornerShape(30.dp),
-                            modifier = Modifier.size(74.dp)
+                            shape = RoundedCornerShape(30.dp, 20.dp, 34.dp, 24.dp),
+                            modifier = Modifier.size(78.dp)
                         ) {
                             Icon(Icons.Rounded.Edit, contentDescription = "New chat", modifier = Modifier.size(31.dp))
                         }
@@ -172,7 +215,7 @@ private fun MessengerApp() {
                     )
                 }
             } else {
-                ChatScreen(selectedConversation, onBack = { selectedId = null })
+                ChatScreen(item = selectedConversation, onBack = { selectedId = null })
             }
         }
     }
@@ -185,32 +228,89 @@ private fun ExpressiveBackdrop(content: @Composable () -> Unit) {
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFFFFE9FF), Color(0xFFE8D4FF), Color(0xFFFFF7FF))
+                    listOf(Color(0xFFFFECFF), Color(0xFFE4D0FF), Color(0xFFFFF7FF))
                 )
             )
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            drawCircle(Coral.copy(alpha = 0.18f), radius = size.minDimension * 0.46f, center = Offset(size.width * 0.05f, size.height * 0.10f))
-            drawCircle(Violet.copy(alpha = 0.16f), radius = size.minDimension * 0.48f, center = Offset(size.width * 0.96f, size.height * 0.22f))
-            drawCircle(Cyan.copy(alpha = 0.12f), radius = size.minDimension * 0.38f, center = Offset(size.width * 0.70f, size.height * 0.86f))
+            drawCircle(Coral.copy(alpha = 0.20f), radius = size.minDimension * 0.46f, center = Offset(size.width * 0.03f, size.height * 0.12f))
+            drawCircle(ElectricViolet.copy(alpha = 0.22f), radius = size.minDimension * 0.52f, center = Offset(size.width * 0.98f, size.height * 0.18f))
+            drawCircle(Cyan.copy(alpha = 0.13f), radius = size.minDimension * 0.36f, center = Offset(size.width * 0.70f, size.height * 0.86f))
+            drawCircle(Lime.copy(alpha = 0.22f), radius = size.minDimension * 0.22f, center = Offset(size.width * 0.13f, size.height * 0.82f))
         }
         content()
     }
 }
-
 @Composable
 private fun PixelRail() {
-    NavigationRail(
+    val railState = rememberWideNavigationRailState(initialValue = WideNavigationRailValue.Expanded)
+    val itemColors = WideNavigationRailItemDefaults.colors(
+        selectedIconColor = Ink,
+        selectedTextColor = Ink,
+        selectedIndicatorColor = Lilac,
+        unselectedIconColor = Lilac,
+        unselectedTextColor = Lilac.copy(alpha = 0.84f)
+    )
+
+    WideNavigationRail(
         modifier = Modifier
+            .statusBarsPadding()
             .fillMaxHeight()
-            .clip(RoundedCornerShape(36.dp)),
-        containerColor = Night.copy(alpha = 0.92f),
-        contentColor = Lilac
+            .widthIn(min = 188.dp, max = 214.dp),
+        state = railState,
+        shape = RoundedCornerShape(42.dp),
+        colors = WideNavigationRailDefaults.colors(
+            containerColor = Night.copy(alpha = 0.94f),
+            contentColor = Lilac
+        ),
+        arrangement = Arrangement.spacedBy(8.dp, Alignment.Top),
+        header = {
+            Surface(
+                modifier = Modifier
+                    .padding(horizontal = 14.dp, vertical = 18.dp)
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
+                color = Coral,
+                contentColor = Ink
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(Icons.Rounded.Edit, null)
+                    Text("Compose", fontWeight = FontWeight.Black)
+                }
+            }
+        }
     ) {
-        Spacer(Modifier.height(20.dp))
-        NavigationRailItem(selected = true, onClick = {}, icon = { Icon(Icons.Rounded.Chat, null) }, label = { Text("Chats") })
-        NavigationRailItem(selected = false, onClick = {}, icon = { Icon(Icons.Rounded.Archive, null) }, label = { Text("Archive") })
-        NavigationRailItem(selected = false, onClick = {}, icon = { Icon(Icons.Rounded.Settings, null) }, label = { Text("Setup") })
+        WideNavigationRailItem(
+            selected = true,
+            onClick = {},
+            icon = { Icon(Icons.Rounded.Chat, null) },
+            label = { Text("Chats") },
+            railExpanded = true,
+            iconPosition = NavigationItemIconPosition.Start,
+            colors = itemColors
+        )
+        WideNavigationRailItem(
+            selected = false,
+            onClick = {},
+            icon = { Icon(Icons.Rounded.Archive, null) },
+            label = { Text("Archive") },
+            railExpanded = true,
+            iconPosition = NavigationItemIconPosition.Start,
+            colors = itemColors
+        )
+        WideNavigationRailItem(
+            selected = false,
+            onClick = {},
+            icon = { Icon(Icons.Rounded.Settings, null) },
+            label = { Text("Setup") },
+            railExpanded = true,
+            iconPosition = NavigationItemIconPosition.Start,
+            colors = itemColors
+        )
     }
 }
 
@@ -220,8 +320,8 @@ private fun PixelBottomBar() {
         modifier = Modifier
             .navigationBarsPadding()
             .padding(horizontal = 18.dp, vertical = 10.dp),
-        shape = RoundedCornerShape(36.dp),
-        color = Color.White.copy(alpha = 0.80f),
+        shape = RoundedCornerShape(38.dp),
+        color = Color.White.copy(alpha = 0.86f),
         tonalElevation = 6.dp,
         shadowElevation = 6.dp
     ) {
@@ -255,27 +355,13 @@ private fun ConversationList(
             .fillMaxSize()
             .statusBarsPadding()
             .padding(horizontal = 18.dp),
-        contentPadding = PaddingValues(top = 22.dp, bottom = 118.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(top = 22.dp, bottom = 126.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item { PixelHeader() }
         item { SceneHeroCard() }
         item { SearchPill() }
-        item {
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                FilterChip(selected = activeTab == "all", onClick = { activeTab = "all" }, label = { Text("All") })
-                FilterChip(
-                    selected = activeTab == "pinned",
-                    onClick = { activeTab = "pinned" },
-                    label = { Text("Pinned") },
-                    leadingIcon = { Icon(Icons.Rounded.Star, null, modifier = Modifier.size(18.dp)) }
-                )
-                FilterChip(selected = activeTab == "unread", onClick = { activeTab = "unread" }, label = { Text("Unread") })
-            }
-        }
+        item { ExpressiveFilterGroup(activeTab = activeTab, onTabChange = { activeTab = it }) }
         items(filtered, key = { it.id }) { item ->
             ConversationCard(item = item, selected = selectedId == item.id, onClick = { onSelect(item.id) })
         }
@@ -290,18 +376,19 @@ private fun PixelHeader() {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
-            Text(
-                "Messages",
-                color = Ink,
-                fontSize = 48.sp,
-                lineHeight = 48.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = (-2).sp
-            )
-            Text("Pixel Expressive shell", color = Ink.copy(alpha = 0.58f), style = MaterialTheme.typography.labelLarge)
+            Text("Messages", color = Ink, style = MaterialTheme.typography.displayLarge)
+            Text("Native Pixel Expressive shell", color = Ink.copy(alpha = 0.60f), style = MaterialTheme.typography.labelLarge)
         }
-        Surface(modifier = Modifier.size(46.dp), shape = CircleShape, color = Color.White.copy(alpha = 0.72f), tonalElevation = 4.dp) {
-            IconButton(onClick = {}) { Icon(Icons.Rounded.MoreVert, null, tint = Ink) }
+        Surface(
+            modifier = Modifier.size(52.dp),
+            shape = CircleShape,
+            color = Color.White.copy(alpha = 0.74f),
+            tonalElevation = 6.dp,
+            shadowElevation = 4.dp
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                LoadingIndicator(modifier = Modifier.size(27.dp), color = Violet)
+            }
         }
     }
 }
@@ -311,11 +398,11 @@ private fun SceneHeroCard() {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(178.dp),
-        shape = RoundedCornerShape(42.dp),
+            .height(188.dp),
+        shape = RoundedCornerShape(44.dp),
         color = Night,
         tonalElevation = 10.dp,
-        shadowElevation = 10.dp
+        shadowElevation = 12.dp
     ) {
         Box(
             modifier = Modifier
@@ -325,25 +412,41 @@ private fun SceneHeroCard() {
         ) {
             Text(
                 "NICE",
-                color = Color.White.copy(alpha = 0.88f),
-                fontSize = 70.sp,
-                lineHeight = 64.sp,
+                color = Color.White.copy(alpha = 0.90f),
+                fontSize = 76.sp,
+                lineHeight = 66.sp,
                 fontWeight = FontWeight.Black,
-                letterSpacing = (-4).sp,
+                letterSpacing = (-5).sp,
                 modifier = Modifier.align(Alignment.TopStart)
             )
-            Surface(shape = RoundedCornerShape(28.dp), color = Lime, modifier = Modifier.align(Alignment.TopEnd).offset(y = 6.dp)) {
-                Text("scene mode", modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp), color = Ink, fontWeight = FontWeight.ExtraBold)
+            Surface(
+                shape = RoundedCornerShape(28.dp),
+                color = Lime,
+                modifier = Modifier.align(Alignment.TopEnd).offset(y = 6.dp)
+            ) {
+                Text(
+                    "4x faster",
+                    modifier = Modifier.padding(horizontal = 15.dp, vertical = 9.dp),
+                    color = Ink,
+                    fontWeight = FontWeight.ExtraBold
+                )
             }
-            Text("Messenger imitation for shot", modifier = Modifier.align(Alignment.BottomStart), color = Color.White, fontWeight = FontWeight.SemiBold)
+            Text(
+                "Google Pixel mood, Compose-native",
+                modifier = Modifier.align(Alignment.BottomStart),
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold
+            )
             Surface(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .size(70.dp),
-                shape = RoundedCornerShape(30.dp, 18.dp, 34.dp, 22.dp),
+                    .size(72.dp),
+                shape = RoundedCornerShape(32.dp, 18.dp, 36.dp, 22.dp),
                 color = Lilac
             ) {
-                Box(contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Chat, null, tint = Ink) }
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.Chat, null, tint = Ink, modifier = Modifier.size(30.dp))
+                }
             }
         }
     }
@@ -353,8 +456,8 @@ private fun SceneHeroCard() {
 private fun SearchPill() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(34.dp),
-        color = Color.White.copy(alpha = 0.80f),
+        shape = RoundedCornerShape(36.dp),
+        color = Color.White.copy(alpha = 0.86f),
         tonalElevation = 5.dp,
         shadowElevation = 2.dp
     ) {
@@ -367,15 +470,46 @@ private fun SearchPill() {
 }
 
 @Composable
+private fun ExpressiveFilterGroup(activeTab: String, onTabChange: (String) -> Unit) {
+    ButtonGroup(
+        overflowIndicator = { menuState -> ButtonGroupDefaults.OverflowIndicator(menuState) },
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        toggleableItem(
+            checked = activeTab == "all",
+            label = "All",
+            onCheckedChange = { if (it) onTabChange("all") },
+            icon = { Icon(Icons.Rounded.Inbox, null, modifier = Modifier.size(18.dp)) },
+            weight = 1f
+        )
+        toggleableItem(
+            checked = activeTab == "pinned",
+            label = "Pinned",
+            onCheckedChange = { if (it) onTabChange("pinned") },
+            icon = { Icon(Icons.Rounded.Star, null, modifier = Modifier.size(18.dp)) },
+            weight = 1f
+        )
+        toggleableItem(
+            checked = activeTab == "unread",
+            label = "Unread",
+            onCheckedChange = { if (it) onTabChange("unread") },
+            icon = { Icon(Icons.Rounded.Chat, null, modifier = Modifier.size(18.dp)) },
+            weight = 1f
+        )
+    }
+}
+@Composable
 private fun ConversationCard(item: ConversationUi, selected: Boolean, onClick: () -> Unit) {
+    val cardShape = if (selected) RoundedCornerShape(42.dp, 28.dp, 42.dp, 24.dp) else RoundedCornerShape(36.dp)
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(36.dp))
+            .clip(cardShape)
             .clickable(onClick = onClick)
             .animateContentSize(),
-        shape = RoundedCornerShape(36.dp),
-        color = if (selected) item.cardColor else item.cardColor.copy(alpha = 0.86f),
+        shape = cardShape,
+        color = if (selected) item.cardColor else item.cardColor.copy(alpha = 0.88f),
         tonalElevation = if (selected) 12.dp else 5.dp,
         shadowElevation = if (selected) 8.dp else 2.dp
     ) {
@@ -383,11 +517,23 @@ private fun ConversationCard(item: ConversationUi, selected: Boolean, onClick: (
             Avatar(item)
             Spacer(Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(item.name, maxLines = 1, overflow = TextOverflow.Ellipsis, color = item.onCardColor, fontSize = 22.sp, lineHeight = 24.sp, fontWeight = FontWeight.Black, letterSpacing = (-0.7).sp)
-                Text(item.lastMessage, maxLines = 1, overflow = TextOverflow.Ellipsis, color = item.onCardColor.copy(alpha = 0.72f), style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    item.name,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = item.onCardColor,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    item.lastMessage,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = item.onCardColor.copy(alpha = 0.72f),
+                    style = MaterialTheme.typography.bodyLarge
+                )
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text(item.time, color = item.onCardColor.copy(alpha = 0.78f), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelLarge)
+                Text(item.time, color = item.onCardColor.copy(alpha = 0.78f), style = MaterialTheme.typography.labelLarge)
                 AnimatedVisibility(item.unreadCount > 0) {
                     Surface(shape = CircleShape, color = Ink, modifier = Modifier.padding(top = 6.dp)) {
                         Text(item.unreadCount.toString(), modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp), color = Color.White, fontWeight = FontWeight.Black)
@@ -434,7 +580,7 @@ private fun ChatScreen(item: ConversationUi, onBack: (() -> Unit)?) {
                         Spacer(Modifier.width(10.dp))
                         Column(horizontalAlignment = Alignment.Start) {
                             Text(item.name, maxLines = 1, overflow = TextOverflow.Ellipsis, color = Ink, fontWeight = FontWeight.Black)
-                            Text("cinematic messenger · online", style = MaterialTheme.typography.labelSmall, color = Violet)
+                            Text("cinematic messenger - online", style = MaterialTheme.typography.labelSmall, color = Violet)
                         }
                     }
                 },
@@ -443,7 +589,7 @@ private fun ChatScreen(item: ConversationUi, onBack: (() -> Unit)?) {
                     IconButton(onClick = {}) { Icon(Icons.Rounded.Videocam, null, tint = Ink) }
                     IconButton(onClick = {}) { Icon(Icons.Rounded.MoreVert, null, tint = Ink) }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White.copy(alpha = 0.30f))
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White.copy(alpha = 0.32f))
             )
         },
         bottomBar = { Composer(text = text, onTextChange = { text = it }, onSend = { text = "" }) }
@@ -457,6 +603,7 @@ private fun ChatScreen(item: ConversationUi, onBack: (() -> Unit)?) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item { ChatBanner(item) }
+            item { SceneModeStrip() }
             items(thread, key = { it.id }) { msg -> MessageBubble(msg) }
         }
     }
@@ -467,11 +614,11 @@ private fun ChatBanner(item: ConversationUi) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(154.dp),
-        shape = RoundedCornerShape(40.dp),
+            .height(170.dp),
+        shape = RoundedCornerShape(42.dp),
         color = Night,
         tonalElevation = 8.dp,
-        shadowElevation = 7.dp
+        shadowElevation = 8.dp
     ) {
         Box(
             modifier = Modifier
@@ -479,10 +626,54 @@ private fun ChatBanner(item: ConversationUi) {
                 .background(Brush.linearGradient(listOf(item.avatarColor, Cyan, Lilac)))
                 .padding(18.dp)
         ) {
-            Text(item.name.uppercase(), color = Color.White.copy(alpha = 0.90f), fontSize = 44.sp, lineHeight = 40.sp, fontWeight = FontWeight.Black, letterSpacing = (-2).sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.align(Alignment.TopStart))
-            Surface(shape = RoundedCornerShape(26.dp), color = Color.White.copy(alpha = 0.72f), modifier = Modifier.align(Alignment.BottomEnd)) {
-                Text("scene chat", modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp), color = Ink, fontWeight = FontWeight.Black)
+            Text(
+                item.name.uppercase(),
+                color = Color.White.copy(alpha = 0.92f),
+                fontSize = 48.sp,
+                lineHeight = 42.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = (-2.5).sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.align(Alignment.TopStart)
+            )
+            Surface(shape = RoundedCornerShape(26.dp), color = Color.White.copy(alpha = 0.76f), modifier = Modifier.align(Alignment.BottomEnd)) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    LoadingIndicator(modifier = Modifier.size(18.dp), color = Violet)
+                    Text("scene chat", color = Ink, fontWeight = FontWeight.Black)
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun SceneModeStrip() {
+    var selected by rememberSaveable { mutableStateOf("going") }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        TonalToggleButton(checked = selected == "going", onCheckedChange = { if (it) selected = "going" }) {
+            Icon(Icons.Rounded.Done, null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Going")
+        }
+        TonalToggleButton(checked = selected == "maybe", onCheckedChange = { if (it) selected = "maybe" }) {
+            Icon(Icons.Rounded.Star, null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Maybe")
+        }
+        TonalToggleButton(checked = selected == "quiet", onCheckedChange = { if (it) selected = "quiet" }) {
+            Icon(Icons.Rounded.Archive, null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Quiet")
         }
     }
 }
@@ -491,7 +682,15 @@ private fun ChatBanner(item: ConversationUi) {
 private fun MessageBubble(msg: MessageUi) {
     if (msg.sticker != null) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = if (msg.outgoing) Arrangement.End else Arrangement.Start) {
-            Text(msg.sticker, color = Cyan, fontSize = 72.sp, lineHeight = 70.sp, fontWeight = FontWeight.Black, letterSpacing = (-4).sp, modifier = Modifier.padding(vertical = 10.dp, horizontal = 12.dp))
+            Text(
+                msg.sticker,
+                color = Cyan,
+                fontSize = 76.sp,
+                lineHeight = 70.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = (-4).sp,
+                modifier = Modifier.padding(vertical = 10.dp, horizontal = 12.dp)
+            )
         }
         return
     }
@@ -522,23 +721,87 @@ private fun MessageBubble(msg: MessageUi) {
         }
     }
 }
-
 @Composable
 private fun Composer(text: String, onTextChange: (String) -> Unit, onSend: () -> Unit) {
+    var toolsExpanded by rememberSaveable { mutableStateOf(true) }
+
     Surface(
         modifier = Modifier
             .navigationBarsPadding()
             .imePadding()
             .padding(horizontal = 12.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(38.dp),
-        color = Cyan,
-        tonalElevation = 8.dp,
-        shadowElevation = 8.dp
+        shape = RoundedCornerShape(42.dp),
+        color = Color.White.copy(alpha = 0.90f),
+        tonalElevation = 10.dp,
+        shadowElevation = 10.dp
     ) {
-        Row(modifier = Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            IconButton(onClick = {}) { Icon(Icons.Rounded.Add, "Attach", tint = Ink) }
-            OutlinedTextField(value = text, onValueChange = onTextChange, modifier = Modifier.weight(1f), placeholder = { Text("Message") }, shape = RoundedCornerShape(28.dp), maxLines = 4)
-            FilledIconButton(enabled = text.isNotBlank(), onClick = onSend) { Icon(Icons.Rounded.Send, "Send") }
+        Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(34.dp),
+                color = Cyan.copy(alpha = 0.20f),
+                contentColor = Ink
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp)
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilledIconButton(onClick = {}, colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color.White.copy(alpha = 0.76f), contentColor = Ink)) {
+                        Icon(Icons.Rounded.Add, "Attach")
+                    }
+                    BasicTextField(
+                        value = text,
+                        onValueChange = onTextChange,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 4,
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = Ink, fontWeight = FontWeight.SemiBold),
+                        decorationBox = { innerTextField ->
+                            Box(contentAlignment = Alignment.CenterStart) {
+                                if (text.isBlank()) {
+                                    Text("Message", color = Ink.copy(alpha = 0.48f), style = MaterialTheme.typography.bodyLarge)
+                                }
+                                innerTextField()
+                            }
+                        }
+                    )
+                    IconButton(onClick = { toolsExpanded = !toolsExpanded }) {
+                        Icon(Icons.Rounded.MoreVert, "More tools", tint = Ink)
+                    }
+                }
+            }
+
+            HorizontalFloatingToolbar(
+                expanded = text.isBlank() || toolsExpanded,
+                floatingActionButton = {
+                    FloatingToolbarDefaults.VibrantFloatingActionButton(
+                        onClick = {
+                            if (text.isBlank()) toolsExpanded = !toolsExpanded else onSend()
+                        },
+                        shape = RoundedCornerShape(26.dp),
+                        containerColor = if (text.isBlank()) Coral else Lime,
+                        contentColor = Ink
+                    ) {
+                        Icon(if (text.isBlank()) Icons.Rounded.Add else Icons.Rounded.Send, if (text.isBlank()) "Toggle tools" else "Send")
+                    }
+                },
+                modifier = Modifier.align(Alignment.End),
+                colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(
+                    toolbarContainerColor = Night.copy(alpha = 0.96f),
+                    toolbarContentColor = Lilac,
+                    fabContainerColor = if (text.isBlank()) Coral else Lime,
+                    fabContentColor = Ink
+                ),
+                shape = RoundedCornerShape(32.dp)
+            ) {
+                IconButton(onClick = {}) { Icon(Icons.Rounded.Star, "Star") }
+                IconButton(onClick = {}) { Icon(Icons.Rounded.Search, "Search") }
+                IconButton(onClick = {}) { Icon(Icons.Rounded.Archive, "Archive") }
+                IconButton(onClick = {}) { Icon(Icons.Rounded.MoreVert, "More") }
+            }
         }
     }
 }
@@ -546,11 +809,11 @@ private fun Composer(text: String, onTextChange: (String) -> Unit, onSend: () ->
 @Composable
 private fun EmptyChatState() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Surface(shape = RoundedCornerShape(54.dp), color = Night, tonalElevation = 8.dp, modifier = Modifier.size(240.dp)) {
+        Surface(shape = RoundedCornerShape(56.dp), color = Night, tonalElevation = 8.dp, modifier = Modifier.size(248.dp)) {
             Box(contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Rounded.Chat, null, modifier = Modifier.size(62.dp), tint = Lilac)
-                    Text("Choose a scene chat", fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.padding(top = 10.dp))
+                    LoadingIndicator(modifier = Modifier.size(58.dp), color = Lilac)
+                    Text("Choose a scene chat", fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.padding(top = 14.dp))
                 }
             }
         }
@@ -588,7 +851,7 @@ private val conversations = listOf(
 
 private val messages = mapOf(
     "hwan" to listOf(
-        MessageUi("h1", "Никольский, я скинула тебе карту. Красная точка — конечная.", false, "15:35"),
+        MessageUi("h1", "Никольский, я скинула тебе карту. Красная точка - конечная.", false, "15:35"),
         MessageUi("h2", "Получил. Это по Грушину?", true, "15:36"),
         MessageUi("h3", "Да. Документ тоже приложила. Не официальный рапорт, а служебная выписка.", false, "15:37"),
         MessageUi("h4", "Понял. В кадре читаю с планшета.", true, "15:38"),
