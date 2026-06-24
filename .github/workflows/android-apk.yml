@@ -1,0 +1,123 @@
+name: Android APK
+
+on:
+  push:
+    branches:
+      - native-android-m3-expressive
+    paths:
+      - "android/**"
+      - ".github/workflows/android-apk.yml"
+  pull_request:
+    paths:
+      - "android/**"
+      - ".github/workflows/android-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-debug-apk:
+    name: Build debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+
+      - name: Build debug APK
+        run: gradle -p android :app:assembleDebug --stacktrace
+
+      - name: Prepare release files and notes
+        if: github.event_name != 'pull_request'
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SHA_SHORT="$(git rev-parse --short HEAD)"
+          VERSION_NAME="$(grep -oP 'versionName = "\K[^"]+' android/app/build.gradle.kts | head -n 1 || true)"
+          if [ -z "$VERSION_NAME" ]; then
+            VERSION_NAME="0.1.0"
+          fi
+
+          TAG="android-v${VERSION_NAME}-${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}-${SHA_SHORT}"
+          APK_NAME="messages-expressive-${TAG}.apk"
+
+          cp android/app/build/outputs/apk/debug/app-debug.apk "$APK_NAME"
+
+          git fetch --tags --force
+          PREVIOUS_TAG="$(git tag --list 'android-v*' --sort=-creatordate | head -n 1 || true)"
+
+          if [ -n "$PREVIOUS_TAG" ]; then
+            RANGE="$PREVIOUS_TAG..HEAD"
+          else
+            RANGE="HEAD"
+          fi
+
+          {
+            echo "# Messages Expressive Android APK"
+            echo ""
+            echo "## Сборка"
+            echo "- APK: \`$APK_NAME\`"
+            echo "- Версия приложения: \`$VERSION_NAME\`"
+            echo "- Ветка: \`${GITHUB_REF_NAME}\`"
+            echo "- Коммит: \`${GITHUB_SHA}\`"
+            echo "- Номер сборки GitHub Actions: \`${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}\`"
+            echo ""
+            echo "## Изменения в этом релизе"
+
+            if git log --pretty=format:'- %s (`%h`)' "$RANGE" -- android .github/workflows/android-apk.yml | grep -q .; then
+              git log --pretty=format:'- %s (`%h`)' "$RANGE" -- android .github/workflows/android-apk.yml
+              echo ""
+            else
+              echo "- APK пересобран без изменений в Android-коде."
+            fi
+
+            echo ""
+            echo "## Изменённые файлы"
+
+            if [ -n "$PREVIOUS_TAG" ]; then
+              git diff --name-only "$RANGE" -- android .github/workflows/android-apk.yml | sed 's/^/- /'
+            else
+              git ls-tree -r --name-only HEAD android .github/workflows/android-apk.yml | sed 's/^/- /'
+            fi
+          } > RELEASE_NOTES.md
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "apk=$APK_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: messages-expressive-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+      - name: Publish APK to GitHub Release
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.release.outputs.tag }}" \
+            "${{ steps.release.outputs.apk }}" \
+            --repo "${{ github.repository }}" \
+            --title "Messages Expressive Android ${{ steps.release.outputs.tag }}" \
+            --notes-file RELEASE_NOTES.md \
+            --target "${{ github.sha }}"
